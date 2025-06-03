@@ -1,51 +1,88 @@
-import { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Dashboard from "./components/Dashboard";
+import AIChat from "./components/AIChat";
+import EmissionsTracker from "./components/EmissionsTracker";
+import FinancialImpact from "./components/FinancialImpact";
+import Navbar from "./components/Navbar";
+import CompanySetup from "./components/CompanySetup";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
+function App() {
+  const [currentCompany, setCurrentCompany] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    helloWorldApi();
+    // Check if we have a company stored or need to create one
+    const savedCompanyId = localStorage.getItem('climabill_company_id');
+    if (savedCompanyId) {
+      fetchCompany(savedCompanyId);
+    } else {
+      setLoading(false);
+    }
   }, []);
 
-  return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
-  );
-};
+  const fetchCompany = async (companyId) => {
+    try {
+      const response = await fetch(`${API}/companies/${companyId}`);
+      if (response.ok) {
+        const company = await response.json();
+        setCurrentCompany(company);
+      } else {
+        localStorage.removeItem('climabill_company_id');
+      }
+    } catch (error) {
+      console.error('Error fetching company:', error);
+      localStorage.removeItem('climabill_company_id');
+    }
+    setLoading(false);
+  };
 
-function App() {
+  const handleCompanyCreated = (company) => {
+    setCurrentCompany(company);
+    localStorage.setItem('climabill_company_id', company.id);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-500"></div>
+      </div>
+    );
+  }
+
+  if (!currentCompany) {
+    return <CompanySetup onCompanyCreated={handleCompanyCreated} />;
+  }
+
   return (
-    <div className="App">
+    <div className="App bg-gray-900 min-h-screen text-white">
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
+        <Navbar company={currentCompany} onCompanyChange={setCurrentCompany} />
+        <div className="pt-16">
+          <Routes>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route 
+              path="/dashboard" 
+              element={<Dashboard company={currentCompany} />} 
+            />
+            <Route 
+              path="/ai-chat" 
+              element={<AIChat company={currentCompany} />} 
+            />
+            <Route 
+              path="/emissions" 
+              element={<EmissionsTracker company={currentCompany} />} 
+            />
+            <Route 
+              path="/financial-impact" 
+              element={<FinancialImpact company={currentCompany} />} 
+            />
+          </Routes>
+        </div>
       </BrowserRouter>
     </div>
   );
