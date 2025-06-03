@@ -125,12 +125,28 @@ async def list_companies(
 async def add_emission_record(
     company_id: str,
     record_data: EmissionRecordCreate,
-    service: CarbonDataService = Depends(get_carbon_service)
+    tenant_id: str = Depends(get_tenant_id),
+    service: CarbonDataService = Depends(get_carbon_service),
+    multitenancy: MultiTenancyService = Depends(get_multitenancy_service)
 ):
     """Add emission record for a company"""
     try:
-        record = await service.add_emission_record(company_id, record_data)
-        return record
+        # Verify company belongs to tenant
+        company = await multitenancy.find_one_scoped(
+            multitenancy.companies, {"id": company_id}, tenant_id
+        )
+        if not company:
+            raise HTTPException(status_code=404, detail="Company not found")
+        
+        # Add emission record with tenant scope
+        record_dict = record_data.dict()
+        record_dict["company_id"] = company_id
+        record = await multitenancy.insert_one_scoped(
+            multitenancy.emissions, record_dict, tenant_id
+        )
+        return EmissionRecord(**record)
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -139,9 +155,17 @@ async def get_emissions_summary(
     company_id: str,
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
-    service: CarbonDataService = Depends(get_carbon_service)
+    tenant_id: str = Depends(get_tenant_id),
+    multitenancy: MultiTenancyService = Depends(get_multitenancy_service)
 ):
     """Get emissions summary for a company"""
+    # Verify company belongs to tenant
+    company = await multitenancy.find_one_scoped(
+        multitenancy.companies, {"id": company_id}, tenant_id
+    )
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    
     if not start_date:
         start_date = (datetime.utcnow() - timedelta(days=365)).isoformat()
     if not end_date:
@@ -150,28 +174,101 @@ async def get_emissions_summary(
     start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
     end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
     
-    summary = await service.get_company_emissions_summary(company_id, start_dt, end_dt)
-    return summary
+    # Get tenant-scoped emissions summary
+    pipeline = [
+        {"$match": {"company_id": company_id, "recorded_date": {"$gte": start_dt, "$lte": end_dt}}},
+        {"$group": {
+            "_id": None,
+            "total_co2e": {"$sum": "$total_co2e"},
+            "scope1_total": {"$sum": "$scope1_emissions"},
+            "scope2_total": {"$sum": "$scope2_emissions"},
+            "scope3_total": {"$sum": "$scope3_emissions"},
+            "record_count": {"$sum": 1}
+        }}
+    ]
+    
+    summary_data = await multitenancy.aggregate_scoped(
+        multitenancy.emissions, pipeline, tenant_id
+    )
+    
+    if not summary_data:
+        return {
+            "total_co2e": 0,
+            "scope1_total": 0,
+            "scope2_total": 0,
+            "scope3_total": 0,
+            "record_count": 0
+        }
+    
+    return summary_data[0]
 
 @api_router.get("/companies/{company_id}/emissions/trend")
 async def get_emissions_trend(
     company_id: str,
     months: int = 12,
-    service: CarbonDataService = Depends(get_carbon_service)
+    tenant_id: str = Depends(get_tenant_id),
+    multitenancy: MultiTenancyService = Depends(get_multitenancy_service)
 ):
     """Get emissions trend data"""
-    trend = await service.get_emissions_trend(company_id, months)
-    return trend
+    # Verify company belongs to tenant
+    company = await multitenancy.find_one_scoped(
+        multitenancy.companies, {"id": company_id}, tenant_id
+    )
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    
+    start_date = datetime.utcnow() - timedelta(days=months * 30)
+    
+    pipeline = [
+        {"$match": {"company_id": company_id, "recorded_date": {"$gte": start_date}}},
+        {"$group": {
+            "_id": {
+                "year": {"$year": "$recorded_date"},
+                "month": {"$month": "$recorded_date"}
+            },
+            "total_co2e": {"$sum": "$total_co2e"},
+            "count": {"$sum": 1}
+        }},
+        {"$sort": {"_id.year": 1, "_id.month": 1}}
+    ]
+    
+    trend_data = await multitenancy.aggregate_scoped(
+        multitenancy.emissions, pipeline, tenant_id
+    )
+    
+    return trend_data
 
 @api_router.get("/companies/{company_id}/emissions/sources/top")
 async def get_top_emission_sources(
     company_id: str,
     limit: int = 5,
-    service: CarbonDataService = Depends(get_carbon_service)
+    tenant_id: str = Depends(get_tenant_id),
+    multitenancy: MultiTenancyService = Depends(get_multitenancy_service)
 ):
     """Get top emission sources"""
-    sources = await service.get_top_emission_sources(company_id, limit)
-    return sources
+    # Verify company belongs to tenant
+    company = await multitenancy.find_one_scoped(
+        multitenancy.companies, {"id": company_id}, tenant_id
+    )
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    
+    pipeline = [
+        {"$match": {"company_id": company_id}},
+        {"$group": {
+            "_id": "$emission_source",
+            "total_co2e": {"$sum": "$total_co2e"},
+            "count": {"$sum": 1}
+        }},
+        {"$sort": {"total_co2e": -1}},
+        {"$limit": limit}
+    ]
+    
+    sources_data = await multitenancy.aggregate_scoped(
+        multitenancy.emissions, pipeline, tenant_id
+    )
+    
+    return sources_data
 
 # AI Carbon Intelligence Endpoints
 @api_router.post("/companies/{company_id}/ai/query")
