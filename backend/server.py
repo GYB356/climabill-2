@@ -27,9 +27,12 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# Import blockchain and compliance services
+# Import blockchain, compliance, auth and multi-tenancy services
 from blockchain_service import BlockchainService
 from compliance_service import ComplianceService
+from auth_service import AuthenticationService, get_current_user_dependency, require_permission
+from multitenancy_service import MultiTenancyService, TenantContext
+from auth_models import User, Tenant, UserCreate, UserUpdate, TenantCreate, UserRole
 
 # Initialize services
 carbon_service = CarbonDataService(db)
@@ -37,6 +40,8 @@ ai_service = CarbonAIService()
 calculator = CarbonCalculator()
 blockchain_service = BlockchainService()
 compliance_service = ComplianceService(db)
+auth_service = AuthenticationService(db)
+tenancy_service = MultiTenancyService(db)
 
 # Create the main app without a prefix
 app = FastAPI(title="ClimaBill API", description="Carbon Intelligence and Billing Management Platform", version="1.0.0")
