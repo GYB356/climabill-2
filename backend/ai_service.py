@@ -13,6 +13,14 @@ class CarbonAIService:
     async def process_natural_language_query(self, company_data: Dict, query: str, user_context: Optional[Dict] = None) -> str:
         """Process natural language queries about carbon data using GPT-4"""
         
+        # Safely convert data to JSON strings, handling datetime objects
+        def safe_json_dumps(obj):
+            def default(o):
+                if isinstance(o, datetime):
+                    return o.isoformat()
+                return str(o)
+            return json.dumps(obj, default=default, indent=2)
+        
         # Prepare context for AI
         context = f"""
         You are ClimaBill's Carbon Intelligence AI. Analyze the following company data and answer the user's question.
@@ -24,16 +32,16 @@ class CarbonAIService:
         - Annual Revenue: ${company_data.get('annual_revenue', 0):,.2f}
         
         Recent Emissions Data:
-        {json.dumps(company_data.get('recent_emissions', {}), indent=2)}
+        {safe_json_dumps(company_data.get('recent_emissions', {}))}
         
         Emission Sources:
-        {json.dumps(company_data.get('emission_sources', []), indent=2)}
+        {safe_json_dumps(company_data.get('emission_sources', []))}
         
         Carbon Targets:
-        {json.dumps(company_data.get('targets', []), indent=2)}
+        {safe_json_dumps(company_data.get('targets', []))}
         
         Recent Initiatives:
-        {json.dumps(company_data.get('initiatives', []), indent=2)}
+        {safe_json_dumps(company_data.get('initiatives', []))}
         
         Please provide a comprehensive, data-driven answer that:
         1. Uses specific numbers from the data
