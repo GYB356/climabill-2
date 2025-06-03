@@ -9,10 +9,10 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
 
 # Import our models and services
-from .models import *
-from .data_service import CarbonDataService
-from .ai_service import CarbonAIService
-from .carbon_calculator import CarbonCalculator
+from models import *
+from data_service import CarbonDataService
+from ai_service import CarbonAIService
+from carbon_calculator import CarbonCalculator
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
