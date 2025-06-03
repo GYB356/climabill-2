@@ -30,7 +30,10 @@ db = client[os.environ['DB_NAME']]
 # Import blockchain service
 from blockchain_service import BlockchainService
 
-# Initialize blockchain service
+# Initialize services
+carbon_service = CarbonDataService(db)
+ai_service = CarbonAIService()
+calculator = CarbonCalculator()
 blockchain_service = BlockchainService()
 
 # Create the main app without a prefix
