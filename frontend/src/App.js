@@ -83,6 +83,14 @@ function App() {
               path="/financial-impact" 
               element={<FinancialImpact company={currentCompany} />} 
             />
+            <Route 
+              path="/marketplace" 
+              element={<CarbonMarketplace company={currentCompany} />} 
+            />
+            <Route 
+              path="/supply-chain" 
+              element={<SupplyChainVisibility company={currentCompany} />} 
+            />
           </Routes>
         </div>
       </BrowserRouter>
