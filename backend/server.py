@@ -376,13 +376,13 @@ async def get_offset_projects(
     return {"projects": listings}
 
 @api_router.post("/marketplace/purchase")
-async def purchase_carbon_offsets(
-    listing_id: str,
-    credits_amount: int,
-    company_id: str
-):
+async def purchase_carbon_offsets(purchase_data: dict):
     """Purchase carbon offset credits"""
     try:
+        listing_id = purchase_data["listing_id"]
+        credits_amount = purchase_data["credits_amount"]
+        company_id = purchase_data["company_id"]
+        
         # Generate a mock buyer address for demo
         buyer_address = f"0x{company_id[:40].replace('-', '0').lower()}"
         
