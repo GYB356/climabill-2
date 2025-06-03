@@ -99,7 +99,95 @@ class CarbonForecast(BaseModel):
     assumptions: List[str]
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-# Request/Response Models
+# Blockchain and Carbon Offset Models
+class OffsetProject(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    project_name: str
+    project_type: str  # Forest Conservation, Renewable Energy, etc.
+    location: str
+    developer: str
+    description: str
+    verification_standard: str  # VCS, Gold Standard, ACR
+    methodology: str
+    vintage_year: int
+    total_credits: float
+    available_credits: float
+    price_per_credit: float
+    rating: float = 0.0
+    additional_benefits: List[str] = []
+    image_url: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class CarbonCertificate(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    certificate_id: str
+    project_id: str
+    company_id: str
+    credits_amount: float
+    purchase_price: float
+    purchase_date: datetime
+    blockchain_address: str
+    transaction_hash: str
+    verification_status: str = "verified"
+    retirement_status: str = "active"  # active, retired
+    retirement_date: Optional[datetime] = None
+    retirement_reason: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class OffsetPurchase(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    company_id: str
+    project_id: str
+    credits_purchased: float
+    total_cost: float
+    purchase_date: datetime
+    transaction_hash: str
+    certificate_id: str
+    status: str = "completed"
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+# Supply Chain Models
+class Supplier(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    company_id: str  # The company this supplier belongs to
+    supplier_name: str
+    industry: str
+    location: str
+    contact_email: str
+    annual_revenue: float
+    employee_count: int
+    carbon_score: float = 0.0  # 0-100 scoring
+    verification_status: str = "pending"  # pending, verified, flagged
+    partnership_level: str = "basic"  # basic, preferred, strategic
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class SupplyChainEmission(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    company_id: str
+    supplier_id: str
+    emission_type: str  # upstream, downstream
+    scope: EmissionScope
+    co2_equivalent_kg: float
+    activity_description: str
+    reporting_period_start: datetime
+    reporting_period_end: datetime
+    data_quality: str = "estimated"  # estimated, measured, calculated
+    verification_level: str = "supplier_reported"  # supplier_reported, third_party_verified
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class SupplyChainTarget(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    company_id: str
+    target_name: str
+    target_type: str = "supply_chain_reduction"
+    baseline_year: int
+    target_year: int
+    reduction_percentage: float
+    scope_coverage: List[EmissionScope]
+    participating_suppliers: List[str]  # List of supplier IDs
+    progress_percentage: float = 0.0
+    status: str = "active"
+    created_at: datetime = Field(default_factory=datetime.utcnow)
 class CompanyCreate(BaseModel):
     name: str
     industry: IndustryType
