@@ -225,12 +225,17 @@ class ClimaBillAPITester:
 
     def test_calculate_electricity_emissions(self):
         """Test electricity emissions calculation"""
+        data = {
+            "kwh_consumed": 1000, 
+            "region": "us_average", 
+            "renewable_percentage": 20
+        }
         return self.run_test(
             "Calculate Electricity Emissions", 
             "POST", 
             "calculate/electricity", 
             200,
-            params={"kwh_consumed": 1000, "region": "us_average", "renewable_percentage": 20}
+            data=data
         )
 
     def test_calculate_fuel_emissions(self):
