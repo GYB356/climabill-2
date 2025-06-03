@@ -33,6 +33,7 @@ from blockchain_service import BlockchainService
 from compliance_service import ComplianceService
 from auth_service import AuthenticationService, get_current_user_dependency, require_permission
 from multitenancy_service import MultiTenancyService, TenantContextMiddleware, get_tenant_context, get_current_tenant, get_current_user, get_tenant_id
+from security_service import SecurityService, SecurityMiddleware, APIKeyAuth, require_permission
 from auth_models import User, Tenant, UserCreate, UserUpdate, TenantCreate, UserRole
 
 # Initialize services
