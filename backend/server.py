@@ -183,6 +183,115 @@ async def get_current_user_info(
         }
     }
 
+# Security Management Endpoints (Admin only)
+@api_router.post("/security/api-keys")
+async def create_api_key(
+    name: str,
+    permissions: List[str],
+    tenant_id: str = Depends(get_tenant_id),
+    current_user: dict = Depends(get_current_user),
+    security: SecurityService = Depends(get_security_service)
+):
+    """Create a new API key for programmatic access (Admin only)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin role required"
+        )
+    
+    # Input validation
+    name = security.validate_input_string(name, "name")
+    
+    # Validate permissions
+    valid_permissions = ["read", "write", "admin", "ai", "marketplace", "compliance"]
+    for permission in permissions:
+        if permission not in valid_permissions:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid permission: {permission}"
+            )
+    
+    api_key_data = await security.generate_api_key(
+        name=name,
+        tenant_id=tenant_id,
+        user_id=current_user["id"],
+        permissions=permissions
+    )
+    
+    return api_key_data
+
+@api_router.get("/security/audit-logs")
+async def get_audit_logs(
+    limit: int = 100,
+    skip: int = 0,
+    event_type: Optional[str] = None,
+    tenant_id: str = Depends(get_tenant_id),
+    current_user: dict = Depends(get_current_user),
+    security: SecurityService = Depends(get_security_service)
+):
+    """Get audit logs for the tenant (Admin only)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin role required"
+        )
+    
+    # Build query filter
+    query_filter = {"tenant_id": tenant_id} if hasattr(security.audit_logs, "find") else {}
+    if event_type:
+        query_filter["event_type"] = event_type
+    
+    # Get audit logs
+    cursor = security.audit_logs.find(query_filter).sort("timestamp", -1).skip(skip).limit(limit)
+    logs = await cursor.to_list(length=limit)
+    
+    # Remove sensitive data
+    for log in logs:
+        log.pop("_id", None)
+        if "headers" in log:
+            # Remove authorization headers for security
+            log["headers"].pop("authorization", None)
+            log["headers"].pop("x-api-key", None)
+    
+    return {"logs": logs, "total": await security.audit_logs.count_documents(query_filter)}
+
+@api_router.get("/security/stats")
+async def get_security_stats(
+    tenant_id: str = Depends(get_tenant_id),
+    current_user: dict = Depends(get_current_user),
+    security: SecurityService = Depends(get_security_service)
+):
+    """Get security statistics for the tenant (Admin only)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin role required"
+        )
+    
+    # Get stats from last 24 hours
+    start_time = datetime.utcnow() - timedelta(hours=24)
+    
+    stats = {
+        "total_requests_24h": await security.audit_logs.count_documents({
+            "timestamp": {"$gte": start_time},
+            "event_type": "API_ACCESS"
+        }),
+        "failed_logins_24h": await security.audit_logs.count_documents({
+            "timestamp": {"$gte": start_time},
+            "event_type": "INVALID_API_KEY"
+        }),
+        "rate_limit_violations_24h": await security.audit_logs.count_documents({
+            "timestamp": {"$gte": start_time},
+            "event_type": "RATE_LIMIT_EXCEEDED"
+        }),
+        "security_events_24h": await security.audit_logs.count_documents({
+            "timestamp": {"$gte": start_time},
+            "severity": {"$in": ["warning", "error"]}
+        })
+    }
+    
+    return stats
+
 # Company Management Endpoints
 @api_router.post("/companies", response_model=Company)
 async def create_company(
