@@ -255,26 +255,28 @@ class ClimaBillAPITester:
 
     def test_calculate_travel_emissions(self):
         """Test travel emissions calculation"""
-        travel_data = [
-            {
-                "mode": "flight",
-                "distance_km": 1000,
-                "passengers": 1,
-                "class": "economy"
-            },
-            {
-                "mode": "car",
-                "distance_km": 500,
-                "vehicle_type": "medium"
-            }
-        ]
+        data = {
+            "trips": [
+                {
+                    "mode": "flight",
+                    "distance_km": 1000,
+                    "passengers": 1,
+                    "class": "economy"
+                },
+                {
+                    "mode": "car",
+                    "distance_km": 500,
+                    "vehicle_type": "medium"
+                }
+            ]
+        }
         
         return self.run_test(
             "Calculate Travel Emissions", 
             "POST", 
             "calculate/travel", 
             200,
-            data=travel_data
+            data=data
         )
 
     def test_get_dashboard_data(self):
