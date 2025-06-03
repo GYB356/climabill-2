@@ -455,7 +455,7 @@ async def process_ai_query(
             query_request.query_text
         )
         
-        # Save query and response
+        # Save query and response with tenant scope
         ai_query = AIQuery(
             company_id=company_id,
             user_id=query_request.user_id,
@@ -463,7 +463,11 @@ async def process_ai_query(
             response_text=response,
             query_type="analytics"
         )
-        await db.ai_queries.insert_one(ai_query.dict())
+        await multitenancy.insert_one_scoped(
+            multitenancy.ai_chat_sessions,  # Use chat_sessions collection for AI queries
+            ai_query.dict(),
+            tenant_id
+        )
         
         return {"query": query_request.query_text, "response": response, "query_id": ai_query.id}
         
