@@ -565,6 +565,20 @@ class ClimaBillAPITester:
         # Benchmarking
         self.test_get_industry_benchmark()
         
+        # Carbon Marketplace
+        self.test_marketplace_projects()
+        self.test_marketplace_purchase()
+        self.test_get_company_certificates()
+        
+        # Supply Chain
+        self.test_add_supplier()
+        self.test_get_company_suppliers()
+        self.test_get_supply_chain_dashboard()
+        
+        # Compliance
+        self.test_get_compliance_dashboard()
+        self.test_get_compliance_standards()
+        
         # Print results
         print(f"\n📊 Tests passed: {self.tests_passed}/{self.tests_run} ({(self.tests_passed/self.tests_run)*100:.1f}%)")
         
