@@ -238,31 +238,45 @@ async def generate_reduction_recommendations(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Recommendations generation failed: {str(e)}")
 
+# Carbon Calculation Models
+class ElectricityCalculationRequest(BaseModel):
+    kwh_consumed: float
+    region: str = "us_average"
+    renewable_percentage: float = 0
+
+class FuelCalculationRequest(BaseModel):
+    fuel_type: str
+    quantity: float
+    unit: str = "liters"
+
+class TravelCalculationRequest(BaseModel):
+    trips: List[Dict[str, Any]]
+
 # Carbon Calculation Endpoints
 @api_router.post("/calculate/electricity")
-async def calculate_electricity_emissions(
-    kwh_consumed: float,
-    region: str = "us_average",
-    renewable_percentage: float = 0
-):
+async def calculate_electricity_emissions(request: ElectricityCalculationRequest):
     """Calculate emissions from electricity consumption"""
-    result = calculator.calculate_electricity_emissions(kwh_consumed, region, renewable_percentage)
+    result = calculator.calculate_electricity_emissions(
+        request.kwh_consumed, 
+        request.region, 
+        request.renewable_percentage
+    )
     return result
 
 @api_router.post("/calculate/fuel")
-async def calculate_fuel_emissions(
-    fuel_type: str,
-    quantity: float,
-    unit: str = "liters"
-):
+async def calculate_fuel_emissions(request: FuelCalculationRequest):
     """Calculate emissions from fuel combustion"""
-    result = calculator.calculate_fuel_emissions(fuel_type, quantity, unit)
+    result = calculator.calculate_fuel_emissions(
+        request.fuel_type, 
+        request.quantity, 
+        request.unit
+    )
     return result
 
 @api_router.post("/calculate/travel")
-async def calculate_travel_emissions(trips: List[Dict[str, Any]]):
+async def calculate_travel_emissions(request: TravelCalculationRequest):
     """Calculate emissions from business travel"""
-    result = calculator.calculate_business_travel_emissions(trips)
+    result = calculator.calculate_business_travel_emissions(request.trips)
     return result
 
 # Dashboard and Analytics Endpoints
