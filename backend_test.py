@@ -522,8 +522,14 @@ class ClimaBillAPITester:
             params={"employee_count": 50}
         )
 
-    def run_all_tests(self):
-        """Run all API tests"""
+    def test_get_compliance_standards(self):
+        """Test getting compliance standards"""
+        return self.run_test(
+            "Get Compliance Standards", 
+            "GET", 
+            "compliance/standards", 
+            200
+        )
         print("🚀 Starting ClimaBill API Tests")
         
         # Basic health check
