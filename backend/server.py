@@ -372,22 +372,73 @@ async def get_top_emission_sources(
 async def process_ai_query(
     company_id: str,
     query_request: AIQueryRequest,
-    service: CarbonDataService = Depends(get_carbon_service),
+    tenant_id: str = Depends(get_tenant_id),
+    multitenancy: MultiTenancyService = Depends(get_multitenancy_service),
     ai_svc: CarbonAIService = Depends(get_ai_service)
 ):
     """Process natural language queries about carbon data"""
     try:
-        # Get company data for context
-        company = await db.companies.find_one({"id": company_id})
+        # Get company data for context with tenant scope
+        company = await multitenancy.find_one_scoped(
+            multitenancy.companies, {"id": company_id}, tenant_id
+        )
         if not company:
             raise HTTPException(status_code=404, detail="Company not found")
         
-        # Get recent emissions data
+        # Get recent emissions data with tenant scope
         end_date = datetime.utcnow()
         start_date = end_date - timedelta(days=365)
-        emissions_summary = await service.get_company_emissions_summary(company_id, start_date, end_date)
-        emissions_trend = await service.get_emissions_trend(company_id, 12)
-        top_sources = await service.get_top_emission_sources(company_id)
+        
+        # Get emissions summary using tenant-scoped aggregation
+        emissions_pipeline = [
+            {"$match": {"company_id": company_id, "recorded_date": {"$gte": start_date, "$lte": end_date}}},
+            {"$group": {
+                "_id": None,
+                "total_co2e": {"$sum": "$total_co2e"},
+                "scope1_total": {"$sum": "$scope1_emissions"},
+                "scope2_total": {"$sum": "$scope2_emissions"},
+                "scope3_total": {"$sum": "$scope3_emissions"}
+            }}
+        ]
+        
+        emissions_summary_data = await multitenancy.aggregate_scoped(
+            multitenancy.emissions, emissions_pipeline, tenant_id
+        )
+        emissions_summary = emissions_summary_data[0] if emissions_summary_data else {
+            "total_co2e": 0, "scope1_total": 0, "scope2_total": 0, "scope3_total": 0
+        }
+        
+        # Get emissions trend
+        trend_pipeline = [
+            {"$match": {"company_id": company_id, "recorded_date": {"$gte": start_date}}},
+            {"$group": {
+                "_id": {
+                    "year": {"$year": "$recorded_date"},
+                    "month": {"$month": "$recorded_date"}
+                },
+                "total_co2e": {"$sum": "$total_co2e"}
+            }},
+            {"$sort": {"_id.year": 1, "_id.month": 1}}
+        ]
+        
+        emissions_trend = await multitenancy.aggregate_scoped(
+            multitenancy.emissions, trend_pipeline, tenant_id
+        )
+        
+        # Get top sources
+        sources_pipeline = [
+            {"$match": {"company_id": company_id}},
+            {"$group": {
+                "_id": "$emission_source",
+                "total_co2e": {"$sum": "$total_co2e"}
+            }},
+            {"$sort": {"total_co2e": -1}},
+            {"$limit": 5}
+        ]
+        
+        top_sources = await multitenancy.aggregate_scoped(
+            multitenancy.emissions, sources_pipeline, tenant_id
+        )
         
         # Prepare context data (convert datetime objects to strings)
         company_data = {
