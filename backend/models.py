@@ -188,6 +188,8 @@ class SupplyChainTarget(BaseModel):
     progress_percentage: float = 0.0
     status: str = "active"
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+# Request/Response Models
 class CompanyCreate(BaseModel):
     name: str
     industry: IndustryType
