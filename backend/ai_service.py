@@ -55,7 +55,7 @@ class CarbonAIService:
         
         try:
             response = self.openai_client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": "You are ClimaBill's AI Carbon Intelligence expert. Provide data-driven, actionable insights about carbon emissions and sustainability initiatives. Always include financial implications and ROI considerations."},
                     {"role": "user", "content": context}
