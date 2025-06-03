@@ -111,7 +111,7 @@ class CarbonAIService:
         """
         
         try:
-            response = await self.openai_client.chat.completions.acreate(
+            response = self.openai_client.chat.completions.create(
                 model="gpt-4",
                 messages=[
                     {"role": "system", "content": "You are an expert carbon emissions forecasting analyst. Provide detailed, data-driven predictions based on historical trends, industry benchmarks, and business factors."},
