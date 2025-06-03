@@ -90,11 +90,16 @@ async def health_check():
 async def login(
     email: str,
     password: str,
-    multitenancy: MultiTenancyService = Depends(get_multitenancy_service)
+    multitenancy: MultiTenancyService = Depends(get_multitenancy_service),
+    security: SecurityService = Depends(get_security_service)
 ):
     """Login with email and password, returns JWT token"""
     import hashlib
     from jose import jwt
+    
+    # Input validation
+    email = security.validate_email(email)
+    password = security.validate_input_string(password, "password")
     
     # Hash the provided password
     hashed_password = hashlib.sha256(password.encode()).hexdigest()
