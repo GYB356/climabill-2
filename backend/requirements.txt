@@ -28,6 +28,6 @@ web3>=6.0.0
 eth-account>=0.8.0
 python-multipart>=0.0.9
 fastapi-users>=12.1.0
-fastapi-users-db-mongodb>=2.0.0
+fastapi-users-db-mongodb>=1.1.0
 authlib>=1.2.1
 httpx>=0.24.0
