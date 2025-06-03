@@ -92,125 +92,445 @@ class ClimaBillAPITester:
             print(f"❌ Failed - Error: {str(e)}")
             return False, {}
 
-    def test_health_check(self):
-        """Test API health check endpoint"""
-        return self.run_test("Health Check", "GET", "health", 200)
+    # Multi-tenant Authentication Tests
+    def test_login_alpha_admin(self):
+        """Test login with Alpha admin credentials"""
+        return self.run_test(
+            "Login with Alpha Admin Credentials", 
+            "POST", 
+            "auth/login", 
+            200, 
+            params=ALPHA_ADMIN_CREDS
+        )
 
-    def test_create_company(self):
-        """Test company creation"""
+    def test_login_beta_admin(self):
+        """Test login with Beta admin credentials"""
+        return self.run_test(
+            "Login with Beta Admin Credentials", 
+            "POST", 
+            "auth/login", 
+            200, 
+            params=BETA_ADMIN_CREDS
+        )
+
+    def test_login_invalid_credentials(self):
+        """Test login with invalid credentials"""
+        return self.run_test(
+            "Login with Invalid Credentials", 
+            "POST", 
+            "auth/login", 
+            401, 
+            params={"email": "invalid@example.com", "password": "wrongpassword"}
+        )
+
+    def test_get_current_user_alpha(self):
+        """Test getting current user info with Alpha token"""
+        headers = {"Authorization": f"Bearer {self.alpha_token}"}
+        return self.run_test(
+            "Get Current User with Alpha Token", 
+            "GET", 
+            "auth/me", 
+            200, 
+            headers=headers
+        )
+
+    def test_get_current_user_beta(self):
+        """Test getting current user info with Beta token"""
+        headers = {"Authorization": f"Bearer {self.beta_token}"}
+        return self.run_test(
+            "Get Current User with Beta Token", 
+            "GET", 
+            "auth/me", 
+            200, 
+            headers=headers
+        )
+
+    def test_get_current_user_invalid_token(self):
+        """Test getting current user info with invalid token"""
+        headers = {"Authorization": "Bearer invalid_token"}
+        return self.run_test(
+            "Get Current User with Invalid Token", 
+            "GET", 
+            "auth/me", 
+            401, 
+            headers=headers
+        )
+
+    # Multi-tenant Company Endpoints Tests
+    def test_list_companies_alpha(self):
+        """Test listing companies for Alpha tenant"""
+        headers = {"Authorization": f"Bearer {self.alpha_token}"}
+        success, response = self.run_test(
+            "List Companies for Alpha Tenant", 
+            "GET", 
+            "companies", 
+            200, 
+            headers=headers
+        )
+        
+        if success:
+            # Verify that only Alpha companies are returned
+            company_ids = [company["id"] for company in response]
+            for company_id in company_ids:
+                if company_id in self.beta_company_ids:
+                    print(f"❌ Security issue: Alpha tenant can see Beta company {company_id}")
+                    return False, response
+            
+            print("✅ Verified: Alpha tenant can only see Alpha companies")
+        
+        return success, response
+
+    def test_list_companies_beta(self):
+        """Test listing companies for Beta tenant"""
+        headers = {"Authorization": f"Bearer {self.beta_token}"}
+        success, response = self.run_test(
+            "List Companies for Beta Tenant", 
+            "GET", 
+            "companies", 
+            200, 
+            headers=headers
+        )
+        
+        if success:
+            # Verify that only Beta companies are returned
+            company_ids = [company["id"] for company in response]
+            for company_id in company_ids:
+                if company_id in self.alpha_company_ids:
+                    print(f"❌ Security issue: Beta tenant can see Alpha company {company_id}")
+                    return False, response
+            
+            print("✅ Verified: Beta tenant can only see Beta companies")
+        
+        return success, response
+
+    def test_get_company_alpha(self):
+        """Test getting a specific company for Alpha tenant"""
+        company_id = self.alpha_company_ids[0]
+        headers = {"Authorization": f"Bearer {self.alpha_token}"}
+        return self.run_test(
+            "Get Company for Alpha Tenant", 
+            "GET", 
+            f"companies/{company_id}", 
+            200, 
+            headers=headers
+        )
+
+    def test_get_company_beta(self):
+        """Test getting a specific company for Beta tenant"""
+        company_id = self.beta_company_ids[0]
+        headers = {"Authorization": f"Bearer {self.beta_token}"}
+        return self.run_test(
+            "Get Company for Beta Tenant", 
+            "GET", 
+            f"companies/{company_id}", 
+            200, 
+            headers=headers
+        )
+
+    def test_cross_tenant_company_access_alpha_to_beta(self):
+        """Test Alpha tenant trying to access Beta company"""
+        company_id = self.beta_company_ids[0]
+        headers = {"Authorization": f"Bearer {self.alpha_token}"}
+        return self.run_test(
+            "Cross-Tenant Access: Alpha -> Beta Company", 
+            "GET", 
+            f"companies/{company_id}", 
+            404, 
+            headers=headers
+        )
+
+    def test_cross_tenant_company_access_beta_to_alpha(self):
+        """Test Beta tenant trying to access Alpha company"""
+        company_id = self.alpha_company_ids[0]
+        headers = {"Authorization": f"Bearer {self.beta_token}"}
+        return self.run_test(
+            "Cross-Tenant Access: Beta -> Alpha Company", 
+            "GET", 
+            f"companies/{company_id}", 
+            404, 
+            headers=headers
+        )
+
+    def test_create_company_alpha(self):
+        """Test creating a new company for Alpha tenant"""
         company_data = {
-            "name": f"Test Company {uuid.uuid4()}",
+            "name": f"Alpha Test Company {uuid.uuid4()}",
             "industry": "saas",
-            "employee_count": 50,
-            "annual_revenue": 1000000,
+            "employee_count": 150,
+            "annual_revenue": 5000000,
             "headquarters_location": "San Francisco, CA",
             "compliance_standards": ["ghg_protocol"]
         }
+        headers = {"Authorization": f"Bearer {self.alpha_token}"}
         success, response = self.run_test(
-            "Create Company", 
+            "Create Company for Alpha Tenant", 
             "POST", 
             "companies", 
             200, 
-            data=company_data
+            data=company_data,
+            headers=headers
         )
+        
         if success:
-            self.company_id = response.get("id")
-            print(f"Created company with ID: {self.company_id}")
+            self.alpha_new_company_id = response["id"]
+            print(f"Created Alpha company with ID: {self.alpha_new_company_id}")
+        
         return success, response
 
-    def test_get_company(self):
-        """Test getting company details"""
-        if not self.company_id:
-            print("❌ No company ID available for testing")
-            return False, {}
-        return self.run_test(
-            "Get Company", 
-            "GET", 
-            f"companies/{self.company_id}", 
-            200
+    def test_create_company_beta(self):
+        """Test creating a new company for Beta tenant"""
+        company_data = {
+            "name": f"Beta Test Company {uuid.uuid4()}",
+            "industry": "manufacturing",
+            "employee_count": 500,
+            "annual_revenue": 25000000,
+            "headquarters_location": "Chicago, IL",
+            "compliance_standards": ["eu_csrd"]
+        }
+        headers = {"Authorization": f"Bearer {self.beta_token}"}
+        success, response = self.run_test(
+            "Create Company for Beta Tenant", 
+            "POST", 
+            "companies", 
+            200, 
+            data=company_data,
+            headers=headers
         )
+        
+        if success:
+            self.beta_new_company_id = response["id"]
+            print(f"Created Beta company with ID: {self.beta_new_company_id}")
+        
+        return success, response
 
-    def test_list_companies(self):
-        """Test listing all companies"""
-        return self.run_test("List Companies", "GET", "companies", 200)
-
-    def test_add_emission_source(self):
-        """Test adding an emission source"""
-        if not self.company_id:
-            print("❌ No company ID available for testing")
+    # Multi-tenant Emission Endpoints Tests
+    def test_create_emission_record_alpha(self):
+        """Test creating an emission record for Alpha company"""
+        if not self.alpha_new_company_id:
+            print("❌ No Alpha company ID available for testing")
             return False, {}
             
-        # This is a custom test since there's no direct API for creating sources
-        # We'll create a source through an emission record
         emission_data = {
-            "source_id": str(uuid.uuid4()),  # Generate a new source ID
+            "source_id": f"mock-source-id-alpha-{uuid.uuid4()}",
             "period_start": (datetime.utcnow() - timedelta(days=30)).isoformat(),
             "period_end": datetime.utcnow().isoformat(),
-            "co2_equivalent_kg": 1000.5,
+            "co2_equivalent_kg": 1500.75,
             "activity_data": {
-                "kwh_consumed": 5000,
-                "source_name": "Office Electricity",
-                "source_type": "electricity",
-                "scope": "scope_2"
+                "electricity_kwh": 5000,
+                "renewable_percentage": 20
             },
-            "emission_factor": 0.2,
+            "emission_factor": 0.5,
             "data_quality": "measured"
         }
-        
-        self.source_id = emission_data["source_id"]
-        
-        success, response = self.run_test(
-            "Add Emission Record with New Source", 
+        headers = {"Authorization": f"Bearer {self.alpha_token}"}
+        return self.run_test(
+            "Create Emission Record for Alpha Company", 
             "POST", 
-            f"companies/{self.company_id}/emissions", 
+            f"companies/{self.alpha_new_company_id}/emissions", 
             200, 
-            data=emission_data
+            data=emission_data,
+            headers=headers
         )
+
+    def test_create_emission_record_beta(self):
+        """Test creating an emission record for Beta company"""
+        if not self.beta_new_company_id:
+            print("❌ No Beta company ID available for testing")
+            return False, {}
+            
+        emission_data = {
+            "source_id": f"mock-source-id-beta-{uuid.uuid4()}",
+            "period_start": (datetime.utcnow() - timedelta(days=30)).isoformat(),
+            "period_end": datetime.utcnow().isoformat(),
+            "co2_equivalent_kg": 2500.50,
+            "activity_data": {
+                "electricity_kwh": 8000,
+                "renewable_percentage": 10
+            },
+            "emission_factor": 0.6,
+            "data_quality": "measured"
+        }
+        headers = {"Authorization": f"Bearer {self.beta_token}"}
+        return self.run_test(
+            "Create Emission Record for Beta Company", 
+            "POST", 
+            f"companies/{self.beta_new_company_id}/emissions", 
+            200, 
+            data=emission_data,
+            headers=headers
+        )
+
+    def test_get_emissions_summary_alpha(self):
+        """Test getting emissions summary for Alpha company"""
+        if not self.alpha_new_company_id:
+            print("❌ No Alpha company ID available for testing")
+            return False, {}
+            
+        headers = {"Authorization": f"Bearer {self.alpha_token}"}
+        return self.run_test(
+            "Get Emissions Summary for Alpha Company", 
+            "GET", 
+            f"companies/{self.alpha_new_company_id}/emissions/summary", 
+            200, 
+            headers=headers
+        )
+
+    def test_get_emissions_summary_beta(self):
+        """Test getting emissions summary for Beta company"""
+        if not self.beta_new_company_id:
+            print("❌ No Beta company ID available for testing")
+            return False, {}
+            
+        headers = {"Authorization": f"Bearer {self.beta_token}"}
+        return self.run_test(
+            "Get Emissions Summary for Beta Company", 
+            "GET", 
+            f"companies/{self.beta_new_company_id}/emissions/summary", 
+            200, 
+            headers=headers
+        )
+
+    def test_get_emissions_trend_alpha(self):
+        """Test getting emissions trend for Alpha company"""
+        if not self.alpha_new_company_id:
+            print("❌ No Alpha company ID available for testing")
+            return False, {}
+            
+        headers = {"Authorization": f"Bearer {self.alpha_token}"}
+        return self.run_test(
+            "Get Emissions Trend for Alpha Company", 
+            "GET", 
+            f"companies/{self.alpha_new_company_id}/emissions/trend", 
+            200, 
+            headers=headers
+        )
+
+    def test_get_emissions_trend_beta(self):
+        """Test getting emissions trend for Beta company"""
+        if not self.beta_new_company_id:
+            print("❌ No Beta company ID available for testing")
+            return False, {}
+            
+        headers = {"Authorization": f"Bearer {self.beta_token}"}
+        return self.run_test(
+            "Get Emissions Trend for Beta Company", 
+            "GET", 
+            f"companies/{self.beta_new_company_id}/emissions/trend", 
+            200, 
+            headers=headers
+        )
+
+    def test_get_top_emission_sources_alpha(self):
+        """Test getting top emission sources for Alpha company"""
+        if not self.alpha_new_company_id:
+            print("❌ No Alpha company ID available for testing")
+            return False, {}
+            
+        headers = {"Authorization": f"Bearer {self.alpha_token}"}
+        return self.run_test(
+            "Get Top Emission Sources for Alpha Company", 
+            "GET", 
+            f"companies/{self.alpha_new_company_id}/emissions/sources/top", 
+            200, 
+            headers=headers
+        )
+
+    def test_get_top_emission_sources_beta(self):
+        """Test getting top emission sources for Beta company"""
+        if not self.beta_new_company_id:
+            print("❌ No Beta company ID available for testing")
+            return False, {}
+            
+        headers = {"Authorization": f"Bearer {self.beta_token}"}
+        return self.run_test(
+            "Get Top Emission Sources for Beta Company", 
+            "GET", 
+            f"companies/{self.beta_new_company_id}/emissions/sources/top", 
+            200, 
+            headers=headers
+        )
+
+    def test_cross_tenant_emissions_access_alpha_to_beta(self):
+        """Test Alpha tenant trying to access Beta company emissions"""
+        if not self.beta_new_company_id:
+            print("❌ No Beta company ID available for testing")
+            return False, {}
+            
+        headers = {"Authorization": f"Bearer {self.alpha_token}"}
+        return self.run_test(
+            "Cross-Tenant Access: Alpha -> Beta Emissions", 
+            "GET", 
+            f"companies/{self.beta_new_company_id}/emissions/summary", 
+            404, 
+            headers=headers
+        )
+
+    def test_cross_tenant_emissions_access_beta_to_alpha(self):
+        """Test Beta tenant trying to access Alpha company emissions"""
+        if not self.alpha_new_company_id:
+            print("❌ No Alpha company ID available for testing")
+            return False, {}
+            
+        headers = {"Authorization": f"Bearer {self.beta_token}"}
+        return self.run_test(
+            "Cross-Tenant Access: Beta -> Alpha Emissions", 
+            "GET", 
+            f"companies/{self.alpha_new_company_id}/emissions/summary", 
+            404, 
+            headers=headers
+        )
+
+    # Error Handling Tests
+    def test_missing_auth_header(self):
+        """Test API response with missing Authorization header"""
+        return self.run_test(
+            "Missing Authorization Header", 
+            "GET", 
+            "companies", 
+            401
+        )
+
+    def test_malformed_request(self):
+        """Test API response with malformed request"""
+        headers = {"Authorization": f"Bearer {self.alpha_token}", "Content-Type": "application/json"}
+        # We'll use a custom request here to send invalid JSON
+        url = f"{self.base_url}/api/companies"
         
-        if success:
-            print(f"Created emission record with source ID: {self.source_id}")
+        self.tests_run += 1
+        print(f"\n🔍 Testing Malformed Request...")
         
-        return success, response
-
-    def test_get_emissions_summary(self):
-        """Test getting emissions summary"""
-        if not self.company_id:
-            print("❌ No company ID available for testing")
-            return False, {}
+        try:
+            response = requests.post(url, data="This is not valid JSON", headers=headers)
             
-        return self.run_test(
-            "Get Emissions Summary", 
-            "GET", 
-            f"companies/{self.company_id}/emissions/summary", 
-            200
-        )
-
-    def test_get_emissions_trend(self):
-        """Test getting emissions trend"""
-        if not self.company_id:
-            print("❌ No company ID available for testing")
-            return False, {}
+            # Either 400 (Bad Request) or 422 (Unprocessable Entity) is acceptable
+            success = response.status_code in [400, 422]
             
-        return self.run_test(
-            "Get Emissions Trend", 
-            "GET", 
-            f"companies/{self.company_id}/emissions/trend", 
-            200,
-            params={"months": 6}
-        )
-
-    def test_get_top_emission_sources(self):
-        """Test getting top emission sources"""
-        if not self.company_id:
-            print("❌ No company ID available for testing")
+            if success:
+                self.tests_passed += 1
+                print(f"✅ Passed - Status: {response.status_code}")
+                return True, {}
+            else:
+                print(f"❌ Failed - Status: {response.status_code}")
+                try:
+                    error_detail = response.json()
+                    print(f"Error details: {json.dumps(error_detail, indent=2)}")
+                except:
+                    print(f"Response text: {response.text}")
+                return False, {}
+                
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
             return False, {}
-            
+
+    def test_invalid_company_id(self):
+        """Test API response with invalid company ID"""
+        headers = {"Authorization": f"Bearer {self.alpha_token}"}
         return self.run_test(
-            "Get Top Emission Sources", 
+            "Invalid Company ID", 
             "GET", 
-            f"companies/{self.company_id}/emissions/sources/top", 
-            200,
-            params={"limit": 3}
+            "companies/invalid-uuid-format", 
+            404, 
+            headers=headers
         )
 
     def test_ai_query(self):
