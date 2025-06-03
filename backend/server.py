@@ -56,6 +56,37 @@ async def get_carbon_service():
 async def get_ai_service():
     return ai_service
 
+async def get_auth_service():
+    return auth_service
+
+async def get_tenancy_service():
+    return tenancy_service
+
+# Tenant-aware user dependency
+async def get_current_user_with_tenant(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()),
+    auth_svc: AuthenticationService = Depends(get_auth_service)
+) -> Dict:
+    """Get current user with tenant context"""
+    user_data = await auth_svc.get_current_user(credentials.credentials)
+    
+    if user_data is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    return user_data
+
+# Tenant context dependency
+async def get_tenant_context(
+    user_data: Dict = Depends(get_current_user_with_tenant)
+) -> TenantContext:
+    """Get tenant context for database operations"""
+    return TenantContext(user_data["tenant"]["id"], db)
+
 # Health check endpoint
 @api_router.get("/")
 async def root():
