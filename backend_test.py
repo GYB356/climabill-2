@@ -512,13 +512,14 @@ class ClimaBillAPITester:
             200
         )
         
-    def test_get_compliance_standards(self):
-        """Test getting compliance standards"""
+    def test_get_industry_benchmark(self):
+        """Test getting industry benchmark"""
         return self.run_test(
-            "Get Compliance Standards", 
+            "Get Industry Benchmark", 
             "GET", 
-            "compliance/standards", 
-            200
+            "benchmarks/saas", 
+            200,
+            params={"employee_count": 50}
         )
 
     def run_all_tests(self):
