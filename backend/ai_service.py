@@ -85,7 +85,7 @@ class CarbonAIService:
         - Revenue: ${company_info.get('annual_revenue', 0):,.2f}
         
         Historical Emissions Data (monthly):
-        {json.dumps(data_summary, indent=2)}
+        {self.safe_json_dumps(data_summary)}
         
         Please provide:
         1. Monthly emission predictions for each scope (1, 2, 3)
