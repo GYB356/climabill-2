@@ -332,27 +332,10 @@ async def get_company_targets(company_id: str):
 @api_router.post("/companies/{company_id}/initiatives", response_model=CarbonReductionInitiative)
 async def create_reduction_initiative(
     company_id: str,
-    initiative_name: str,
-    description: str,
-    implementation_cost: float,
-    annual_savings: float,
-    annual_co2_reduction: float,
-    roi_percentage: float,
-    implementation_date: datetime,
-    status: str = "planned"
+    initiative_data: CarbonReductionInitiative
 ):
     """Create a carbon reduction initiative"""
-    initiative = CarbonReductionInitiative(
-        company_id=company_id,
-        initiative_name=initiative_name,
-        description=description,
-        implementation_cost=implementation_cost,
-        annual_savings=annual_savings,
-        annual_co2_reduction=annual_co2_reduction,
-        roi_percentage=roi_percentage,
-        implementation_date=implementation_date,
-        status=status
-    )
+    initiative = CarbonReductionInitiative(**initiative_data.dict(), company_id=company_id)
     await db.reduction_initiatives.insert_one(initiative.dict())
     return initiative
 
