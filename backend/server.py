@@ -186,8 +186,7 @@ async def get_current_user_info(
 # Security Management Endpoints (Admin only)
 @api_router.post("/security/api-keys")
 async def create_api_key(
-    name: str,
-    permissions: List[str],
+    request_data: dict,
     tenant_id: str = Depends(get_tenant_id),
     current_user: dict = Depends(get_current_user),
     security: SecurityService = Depends(get_security_service)
@@ -200,7 +199,8 @@ async def create_api_key(
         )
     
     # Input validation
-    name = security.validate_input_string(name, "name")
+    name = security.validate_input_string(request_data.get("name", ""), "name")
+    permissions = request_data.get("permissions", [])
     
     # Validate permissions
     valid_permissions = ["read", "write", "admin", "ai", "marketplace", "compliance"]
