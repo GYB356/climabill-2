@@ -4,7 +4,7 @@ import json
 from typing import Dict, List, Any, Optional
 from datetime import datetime, timedelta
 import numpy as np
-from .models import CarbonForecast, CarbonReductionInitiative
+from models import CarbonForecast, CarbonReductionInitiative
 
 class CarbonAIService:
     def __init__(self):
