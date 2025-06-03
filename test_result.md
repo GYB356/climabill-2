@@ -270,16 +270,23 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Multi-Tenancy Isolation"
-    - "Authentication Endpoints"
-    - "Company Endpoints"
-    - "Emission Endpoints"
-    - "Cross-Tenant Security"
-    - "Error Handling"
-  stuck_tasks: []
+    - "Security Headers"
+    - "Rate Limiting"
+    - "Input Validation"
+    - "API Key Authentication"
+    - "Audit Logging"
+    - "Multi-tenant Security"
+  stuck_tasks:
+    - "Rate Limiting"
+    - "Input Validation"
+    - "API Key Authentication"
+    - "Audit Logging"
+    - "Multi-tenant Security"
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
   - agent: "testing"
     message: "Starting comprehensive testing of the ClimaBill multi-tenant backend API."
+  - agent: "testing"
+    message: "Completed security hardening tests. Security headers are working correctly, but all other security features (rate limiting, input validation, API key authentication, audit logging, and multi-tenant security) are failing with 500 Internal Server errors. The security middleware appears to be throwing unhandled exceptions. The rate limiting middleware in particular is throwing HTTPException with 429 status code that is not being properly handled by the application."
