@@ -315,23 +315,10 @@ async def get_financial_impact(
 @api_router.post("/companies/{company_id}/targets", response_model=CarbonTarget)
 async def create_carbon_target(
     company_id: str,
-    target_name: str,
-    baseline_year: int,
-    target_year: int,
-    baseline_emissions: float,
-    target_reduction_percentage: float,
-    scope_coverage: List[EmissionScope]
+    target_data: CarbonTarget
 ):
     """Create a carbon reduction target"""
-    target = CarbonTarget(
-        company_id=company_id,
-        target_name=target_name,
-        baseline_year=baseline_year,
-        target_year=target_year,
-        baseline_emissions=baseline_emissions,
-        target_reduction_percentage=target_reduction_percentage,
-        scope_coverage=scope_coverage
-    )
+    target = CarbonTarget(**target_data.dict(), company_id=company_id)
     await db.carbon_targets.insert_one(target.dict())
     return target
 
