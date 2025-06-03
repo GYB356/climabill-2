@@ -149,24 +149,24 @@ async def create_sample_tenants():
     alpha_company = {
         "id": alpha_company_id,
         "name": "Alpha Tech Solutions HQ",
-        "industry": "Technology",
-        "description": "Software development and cloud services",
-        "size": "Medium",
-        "location": "San Francisco, CA",
-        "website": "https://alpha-tech.com",
-        "created_at": datetime.utcnow()
+        "industry": "saas",  # Use enum value
+        "employee_count": 500,
+        "annual_revenue": 50000000.0,
+        "headquarters_location": "San Francisco, CA",
+        "created_at": datetime.utcnow(),
+        "compliance_standards": ["ghg_protocol", "tcfd"]
     }
     
     alpha_subsidiary_id = str(uuid.uuid4())
     alpha_subsidiary = {
         "id": alpha_subsidiary_id,
         "name": "Alpha Data Centers",
-        "industry": "Technology",
-        "description": "Data center operations and hosting",
-        "size": "Small",
-        "location": "Austin, TX",
-        "website": "https://datacenters.alpha-tech.com",
-        "created_at": datetime.utcnow()
+        "industry": "saas",  # Use enum value
+        "employee_count": 150,
+        "annual_revenue": 15000000.0,
+        "headquarters_location": "Austin, TX",
+        "created_at": datetime.utcnow(),
+        "compliance_standards": ["ghg_protocol"]
     }
     
     # Beta companies
@@ -174,24 +174,24 @@ async def create_sample_tenants():
     beta_company = {
         "id": beta_company_id,
         "name": "Beta Manufacturing Plant 1",
-        "industry": "Manufacturing",
-        "description": "Automotive parts manufacturing",
-        "size": "Large",
-        "location": "Detroit, MI",
-        "website": "https://beta-manufacturing.com",
-        "created_at": datetime.utcnow()
+        "industry": "manufacturing",  # Use enum value
+        "employee_count": 1200,
+        "annual_revenue": 150000000.0,
+        "headquarters_location": "Detroit, MI",
+        "created_at": datetime.utcnow(),
+        "compliance_standards": ["ghg_protocol", "eu_csrd"]
     }
     
     beta_facility_id = str(uuid.uuid4())
     beta_facility = {
         "id": beta_facility_id,
         "name": "Beta Distribution Center",
-        "industry": "Manufacturing",
-        "description": "Parts distribution and logistics",
-        "size": "Medium",
-        "location": "Chicago, IL",
-        "website": "https://distribution.beta-manufacturing.com",
-        "created_at": datetime.utcnow()
+        "industry": "manufacturing",  # Use enum value
+        "employee_count": 200,
+        "annual_revenue": 25000000.0,
+        "headquarters_location": "Chicago, IL",
+        "created_at": datetime.utcnow(),
+        "compliance_standards": ["ghg_protocol"]
     }
     
     # Insert companies with tenant scope
