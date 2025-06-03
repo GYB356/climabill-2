@@ -6,6 +6,27 @@ from datetime import datetime, timedelta
 import uuid
 import time
 
+# Test tokens for Alpha and Beta tenants
+ALPHA_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MDFjOThjMC01ZmFlLTQzYTItOTFlNy0xMzUxODYyYzU1NDYiLCJ0ZW5hbnRfaWQiOiJiNDNjMTg1NC1kNTg3LTRmMTAtYmZiNS03ZWI4YjU3MmI0MTYiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NTE1NzY0NzIsImlhdCI6MTc0ODk4NDQ3Mn0.7zW_W3xhVnXoH84CDxNpc0UVIcxhKHdyCkwZmYlIRKs"
+BETA_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjOTBkMDQyNC02MWYyLTQ0ZjUtYWEwZi1iYTYwNzk1MTFlYjAiLCJ0ZW5hbnRfaWQiOiJhYWQ1MGY3Ny0wMzdkLTRiYTUtOGJmMC1lNTgyMWE3N2JhM2MiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NTE1NzY0NzIsImlhdCI6MTc0ODk4NDQ3Mn0.r_S01gVQIL-xqrnpAaUHwT_uqw3m1TxNX4I1Q9W-ZyU"
+
+# Company IDs for Alpha and Beta tenants
+ALPHA_COMPANY_IDS = [
+    "ff6eb712-e0fe-442e-a0af-9abac69fa731",
+    "ea5ba40a-82de-413f-b091-32873cfd0d00"
+]
+
+BETA_COMPANY_IDS = [
+    "b27132cf-2c61-4945-a0b8-34b615aa7678",
+    "82b61da9-af82-43a0-b206-db48f087c7fa"
+]
+
+# Sample credentials for login testing
+ALPHA_ADMIN_CREDS = {"email": "admin@alpha-tech.com", "password": "admin123"}
+ALPHA_USER_CREDS = {"email": "user@alpha-tech.com", "password": "user123"}
+BETA_ADMIN_CREDS = {"email": "admin@beta-manufacturing.com", "password": "admin123"}
+BETA_USER_CREDS = {"email": "user@beta-manufacturing.com", "password": "user123"}
+
 class ClimaBillAPITester:
     def __init__(self, base_url):
         self.base_url = base_url
@@ -15,11 +36,27 @@ class ClimaBillAPITester:
         self.source_id = None
         self.initiative_id = None
         self.target_id = None
+        
+        # Multi-tenant testing properties
+        self.alpha_token = ALPHA_TOKEN
+        self.beta_token = BETA_TOKEN
+        self.alpha_company_ids = ALPHA_COMPANY_IDS
+        self.beta_company_ids = BETA_COMPANY_IDS
+        
+        # Store new company IDs created during testing
+        self.alpha_new_company_id = None
+        self.beta_new_company_id = None
 
-    def run_test(self, name, method, endpoint, expected_status, data=None, params=None):
+    def run_test(self, name, method, endpoint, expected_status, data=None, params=None, headers=None):
         """Run a single API test"""
         url = f"{self.base_url}/api/{endpoint}"
-        headers = {'Content-Type': 'application/json'}
+        
+        if headers is None:
+            headers = {'Content-Type': 'application/json'}
+        else:
+            # Ensure Content-Type is set
+            if 'Content-Type' not in headers:
+                headers['Content-Type'] = 'application/json'
         
         self.tests_run += 1
         print(f"\n🔍 Testing {name}...")
