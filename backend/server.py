@@ -42,10 +42,14 @@ calculator = CarbonCalculator()
 blockchain_service = BlockchainService()
 compliance_service = ComplianceService(db)
 auth_service = AuthenticationService(db)
-tenancy_service = MultiTenancyService(db)
+multitenancy_service = MultiTenancyService(db)
 
 # Create the main app without a prefix
 app = FastAPI(title="ClimaBill API", description="Carbon Intelligence and Billing Management Platform", version="1.0.0")
+
+# Add tenant context middleware
+tenant_middleware = TenantContextMiddleware(multitenancy_service)
+app.middleware("http")(tenant_middleware)
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
