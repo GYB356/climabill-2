@@ -554,6 +554,64 @@ async def get_supply_chain_targets(company_id: str):
     targets = await db.supply_chain_targets.find({"company_id": company_id}).to_list(100)
     return targets
 
+# Compliance Automation Endpoints
+@api_router.get("/companies/{company_id}/compliance/dashboard")
+async def get_compliance_dashboard(company_id: str):
+    """Get compliance status dashboard for all standards"""
+    try:
+        dashboard = await compliance_service.get_compliance_dashboard(company_id)
+        return dashboard
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/companies/{company_id}/compliance/report/{standard}")
+async def generate_compliance_report(
+    company_id: str,
+    standard: str,
+    year: Optional[int] = None
+):
+    """Generate automated compliance report for specified standard"""
+    try:
+        if year is None:
+            year = datetime.utcnow().year
+        
+        report = await compliance_service.generate_compliance_report(company_id, standard, year)
+        return report
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/compliance/standards")
+async def get_available_standards():
+    """Get list of available compliance standards"""
+    return {
+        "standards": [
+            {
+                "code": "eu_csrd",
+                "name": "EU Corporate Sustainability Reporting Directive",
+                "description": "Mandatory sustainability reporting for large EU companies",
+                "deadline": "Annual by April 30"
+            },
+            {
+                "code": "sec_climate",
+                "name": "SEC Climate Disclosure Rules",
+                "description": "Climate-related financial risk disclosures for US public companies",
+                "deadline": "Annual with 10-K filing"
+            },
+            {
+                "code": "ghg_protocol",
+                "name": "GHG Protocol Corporate Standard",
+                "description": "Global standard for corporate greenhouse gas accounting",
+                "deadline": "Annual"
+            },
+            {
+                "code": "tcfd",
+                "name": "TCFD Recommendations",
+                "description": "Climate-related financial disclosures framework",
+                "deadline": "Annual"
+            }
+        ]
+    }
+
 # Include the router in the main app
 app.include_router(api_router)
 
