@@ -200,6 +200,7 @@ async def get_company(
     )
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
+    company.pop('_id', None)  # Remove MongoDB _id field
     return Company(**company)
 
 @api_router.get("/companies", response_model=List[Company])
