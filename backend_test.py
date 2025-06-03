@@ -405,14 +405,120 @@ class ClimaBillAPITester:
             200
         )
 
-    def test_get_industry_benchmark(self):
-        """Test getting industry benchmark"""
+    def test_marketplace_projects(self):
+        """Test getting marketplace projects"""
         return self.run_test(
-            "Get Industry Benchmark", 
+            "Get Marketplace Projects", 
             "GET", 
-            "benchmarks/saas", 
-            200,
-            params={"employee_count": 50}
+            "marketplace/projects", 
+            200
+        )
+        
+    def test_marketplace_purchase(self):
+        """Test purchasing carbon offsets"""
+        if not self.company_id:
+            print("❌ No company ID available for testing")
+            return False, {}
+            
+        purchase_data = {
+            "listing_id": "project-123",
+            "credits_amount": 10,
+            "company_id": self.company_id
+        }
+        
+        return self.run_test(
+            "Purchase Carbon Offsets", 
+            "POST", 
+            "marketplace/purchase", 
+            200, 
+            data=purchase_data
+        )
+        
+    def test_get_company_certificates(self):
+        """Test getting company certificates"""
+        if not self.company_id:
+            print("❌ No company ID available for testing")
+            return False, {}
+            
+        return self.run_test(
+            "Get Company Certificates", 
+            "GET", 
+            f"companies/{self.company_id}/certificates", 
+            200
+        )
+        
+    def test_add_supplier(self):
+        """Test adding a supplier"""
+        if not self.company_id:
+            print("❌ No company ID available for testing")
+            return False, {}
+            
+        supplier_data = {
+            "supplier_name": f"Test Supplier {uuid.uuid4()}",
+            "industry": "manufacturing",
+            "location": "Detroit, MI",
+            "contact_email": "supplier@example.com",
+            "annual_revenue": 5000000,
+            "employee_count": 100,
+            "carbon_score": 75.5,
+            "verification_status": "verified",
+            "partnership_level": "preferred"
+        }
+        
+        return self.run_test(
+            "Add Supplier", 
+            "POST", 
+            f"companies/{self.company_id}/suppliers", 
+            200, 
+            data=supplier_data
+        )
+        
+    def test_get_company_suppliers(self):
+        """Test getting company suppliers"""
+        if not self.company_id:
+            print("❌ No company ID available for testing")
+            return False, {}
+            
+        return self.run_test(
+            "Get Company Suppliers", 
+            "GET", 
+            f"companies/{self.company_id}/suppliers", 
+            200
+        )
+        
+    def test_get_supply_chain_dashboard(self):
+        """Test getting supply chain dashboard"""
+        if not self.company_id:
+            print("❌ No company ID available for testing")
+            return False, {}
+            
+        return self.run_test(
+            "Get Supply Chain Dashboard", 
+            "GET", 
+            f"companies/{self.company_id}/supply-chain/dashboard", 
+            200
+        )
+        
+    def test_get_compliance_dashboard(self):
+        """Test getting compliance dashboard"""
+        if not self.company_id:
+            print("❌ No company ID available for testing")
+            return False, {}
+            
+        return self.run_test(
+            "Get Compliance Dashboard", 
+            "GET", 
+            f"companies/{self.company_id}/compliance/dashboard", 
+            200
+        )
+        
+    def test_get_compliance_standards(self):
+        """Test getting compliance standards"""
+        return self.run_test(
+            "Get Compliance Standards", 
+            "GET", 
+            "compliance/standards", 
+            200
         )
 
     def run_all_tests(self):
