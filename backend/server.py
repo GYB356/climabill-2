@@ -410,14 +410,14 @@ async def purchase_carbon_offsets(purchase_data: dict):
         raise HTTPException(status_code=400, detail=str(e))
 
 @api_router.post("/marketplace/retire")
-async def retire_carbon_credits(
-    certificate_id: str,
-    credits_amount: float,
-    retirement_reason: str,
-    company_id: str
-):
+async def retire_carbon_credits(retirement_data: dict):
     """Retire carbon credits (permanent removal from circulation)"""
     try:
+        certificate_id = retirement_data["certificate_id"]
+        credits_amount = retirement_data["credits_amount"]
+        retirement_reason = retirement_data["retirement_reason"]
+        company_id = retirement_data["company_id"]
+        
         # Find certificate
         certificate = await db.carbon_certificates.find_one({"certificate_id": certificate_id, "company_id": company_id})
         if not certificate:
