@@ -169,7 +169,7 @@ class CarbonAIService:
         - Location: {company_data.get('headquarters_location')}
         
         Current Emissions Breakdown:
-        {json.dumps(emission_data, indent=2)}
+        {self.safe_json_dumps(emission_data)}
         
         Please recommend 5-7 specific initiatives that:
         1. Target the highest impact emission sources
