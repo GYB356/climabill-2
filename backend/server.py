@@ -80,27 +80,44 @@ async def health_check():
 @api_router.post("/companies", response_model=Company)
 async def create_company(
     company_data: CompanyCreate,
-    service: CarbonDataService = Depends(get_carbon_service)
+    tenant_id: str = Depends(get_tenant_id),
+    service: CarbonDataService = Depends(get_carbon_service),
+    multitenancy: MultiTenancyService = Depends(get_multitenancy_service)
 ):
     """Create a new company profile"""
     try:
-        company = await service.create_company(company_data)
-        return company
+        # Use tenant-scoped creation
+        company_dict = company_data.dict()
+        company = await multitenancy.insert_one_scoped(
+            multitenancy.companies, company_dict, tenant_id
+        )
+        return Company(**company)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 @api_router.get("/companies/{company_id}", response_model=Company)
-async def get_company(company_id: str):
+async def get_company(
+    company_id: str,
+    tenant_id: str = Depends(get_tenant_id),
+    multitenancy: MultiTenancyService = Depends(get_multitenancy_service)
+):
     """Get company profile"""
-    company = await db.companies.find_one({"id": company_id})
+    company = await multitenancy.find_one_scoped(
+        multitenancy.companies, {"id": company_id}, tenant_id
+    )
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
     return Company(**company)
 
 @api_router.get("/companies", response_model=List[Company])
-async def list_companies():
+async def list_companies(
+    tenant_id: str = Depends(get_tenant_id),
+    multitenancy: MultiTenancyService = Depends(get_multitenancy_service)
+):
     """List all companies"""
-    companies = await db.companies.find().to_list(100)
+    companies = await multitenancy.find_many_scoped(
+        multitenancy.companies, {}, tenant_id, limit=100
+    )
     return [Company(**company) for company in companies]
 
 # Emission Data Endpoints
