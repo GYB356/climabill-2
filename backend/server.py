@@ -211,6 +211,9 @@ async def list_companies(
     companies = await multitenancy.find_many_scoped(
         multitenancy.companies, {}, tenant_id, limit=100
     )
+    # Remove MongoDB _id field to avoid serialization issues
+    for company in companies:
+        company.pop('_id', None)
     return [Company(**company) for company in companies]
 
 # Emission Data Endpoints
