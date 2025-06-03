@@ -117,6 +117,24 @@ class EmissionRecordCreate(BaseModel):
     emission_factor: float
     data_quality: str = "estimated"
 
+class CarbonTargetCreate(BaseModel):
+    target_name: str
+    baseline_year: int
+    target_year: int
+    baseline_emissions: float
+    target_reduction_percentage: float
+    scope_coverage: List[EmissionScope]
+
+class CarbonReductionInitiativeCreate(BaseModel):
+    initiative_name: str
+    description: str
+    implementation_cost: float
+    annual_savings: float
+    annual_co2_reduction: float
+    roi_percentage: float
+    implementation_date: datetime
+    status: str = "planned"
+
 class AIQueryRequest(BaseModel):
     company_id: str
     query_text: str
