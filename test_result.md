@@ -192,30 +192,22 @@ frontend:
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 0
-  run_ui: false
+  test_sequence: 1
+  run_ui: true
 
 test_plan:
   current_focus:
-    - "Security Headers"
-    - "Rate Limiting"
-    - "Input Validation"
-    - "API Key Authentication"
-    - "Audit Logging"
-    - "Multi-tenant Security"
-  stuck_tasks:
-    - "Rate Limiting"
-    - "Input Validation"
-    - "API Key Authentication"
-    - "Audit Logging"
-    - "Multi-tenant Security"
-  test_all: false
+    - "Authentication Flow"
+    - "Multi-Tenant UI Features"
+    - "New User Registration"
+    - "Existing User Login"
+    - "Authentication State Management"
+    - "UI/UX Verification"
+    - "API Integration"
+  stuck_tasks: []
+  test_all: true
   test_priority: "high_first"
 
 agent_communication:
   - agent: "testing"
-    message: "Starting comprehensive testing of the ClimaBill multi-tenant backend API."
-  - agent: "testing"
-    message: "Completed security hardening tests. Security headers are working correctly, but all other security features (rate limiting, input validation, API key authentication, audit logging, and multi-tenant security) are failing with 500 Internal Server errors. The security middleware appears to be throwing unhandled exceptions. The rate limiting middleware in particular is throwing HTTPException with 429 status code that is not being properly handled by the application."
-  - agent: "testing"
-    message: "After examining the security_service.py file, I found several issues that need to be fixed: 1) The SecurityMiddleware.__call__ method is not properly handling HTTPException for rate limiting (line 394-395). It's re-raising the exception without proper handling. 2) The middleware is not properly integrated with the multi-tenancy middleware, causing conflicts. 3) The API key authentication is not properly implemented in the server.py file. 4) The audit logging is failing due to database connection issues. These issues need to be fixed for the security hardening to work properly."
+    message: "Starting comprehensive testing of the ClimaBill frontend authentication and multi-tenant functionality."
