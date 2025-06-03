@@ -520,8 +520,18 @@ async def get_supply_chain_dashboard(company_id: str):
             "average_carbon_score": avg_carbon_score,
             "total_supply_chain_emissions": total_supply_chain_emissions,
             "score_distribution": score_ranges,
-            "top_performing_suppliers": sorted(suppliers, key=lambda x: x.get("carbon_score", 0), reverse=True)[:5],
-            "suppliers_needing_attention": [s for s in suppliers if s.get("carbon_score", 0) < 50]
+            "top_performing_suppliers": [{
+                "id": str(s.get("_id", s.get("id", ""))),
+                "supplier_name": s.get("supplier_name", "Unknown"),
+                "industry": s.get("industry", "Unknown"),
+                "carbon_score": s.get("carbon_score", 0)
+            } for s in sorted(suppliers, key=lambda x: x.get("carbon_score", 0), reverse=True)[:5]],
+            "suppliers_needing_attention": [{
+                "id": str(s.get("_id", s.get("id", ""))),
+                "supplier_name": s.get("supplier_name", "Unknown"),
+                "industry": s.get("industry", "Unknown"),
+                "carbon_score": s.get("carbon_score", 0)
+            } for s in suppliers if s.get("carbon_score", 0) < 50]
         }
         
         return dashboard_data
