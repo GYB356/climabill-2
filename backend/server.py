@@ -332,7 +332,7 @@ async def get_company_targets(company_id: str):
 @api_router.post("/companies/{company_id}/initiatives", response_model=CarbonReductionInitiative)
 async def create_reduction_initiative(
     company_id: str,
-    initiative_data: CarbonReductionInitiative
+    initiative_data: CarbonReductionInitiativeCreate
 ):
     """Create a carbon reduction initiative"""
     initiative = CarbonReductionInitiative(**initiative_data.dict(), company_id=company_id)
