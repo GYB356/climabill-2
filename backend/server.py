@@ -64,8 +64,8 @@ async def get_ai_service():
 async def get_auth_service():
     return auth_service
 
-async def get_tenancy_service():
-    return tenancy_service
+async def get_multitenancy_service():
+    return multitenancy_service
 
 # Tenant-aware user dependency
 async def get_current_user_with_tenant(
