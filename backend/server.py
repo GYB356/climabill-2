@@ -67,32 +67,7 @@ async def get_auth_service():
 async def get_multitenancy_service():
     return multitenancy_service
 
-# Tenant-aware user dependency
-async def get_current_user_with_tenant(
-    request: Request,
-    credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()),
-    auth_svc: AuthenticationService = Depends(get_auth_service)
-) -> Dict:
-    """Get current user with tenant context"""
-    user_data = await auth_svc.get_current_user(credentials.credentials)
-    
-    if user_data is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    return user_data
-
-# Tenant context dependency
-async def get_tenant_context(
-    user_data: Dict = Depends(get_current_user_with_tenant)
-) -> TenantContext:
-    """Get tenant context for database operations"""
-    return TenantContext(user_data["tenant"]["id"], db)
-
-# Health check endpoint
+# Health check endpoint (no authentication required)
 @api_router.get("/")
 async def root():
     return {"message": "ClimaBill API is running", "version": "1.0.0"}
