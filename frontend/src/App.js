@@ -5,6 +5,8 @@ import Dashboard from "./components/Dashboard";
 import AIChat from "./components/AIChat";
 import EmissionsTracker from "./components/EmissionsTracker";
 import FinancialImpact from "./components/FinancialImpact";
+import CarbonMarketplace from "./components/CarbonMarketplace";
+import SupplyChainVisibility from "./components/SupplyChainVisibility";
 import Navbar from "./components/Navbar";
 import CompanySetup from "./components/CompanySetup";
 
