@@ -240,12 +240,17 @@ class ClimaBillAPITester:
 
     def test_calculate_fuel_emissions(self):
         """Test fuel emissions calculation"""
+        data = {
+            "fuel_type": "gasoline", 
+            "quantity": 100, 
+            "unit": "liters"
+        }
         return self.run_test(
             "Calculate Fuel Emissions", 
             "POST", 
             "calculate/fuel", 
             200,
-            params={"fuel_type": "gasoline", "quantity": 100, "unit": "liters"}
+            data=data
         )
 
     def test_calculate_travel_emissions(self):
