@@ -277,7 +277,7 @@ class CarbonDataService:
             "annual_co2_reduction": total_co2_reduction,
             "current_annual_carbon_cost": carbon_cost["total_carbon_cost"],
             "annual_roi_percentage": annual_roi,
-            "payback_period_years": total_investment / total_annual_savings if total_annual_savings > 0 else float('inf'),
+            "payback_period_years": payback_period,
             "carbon_reduction_value": self.calculator.calculate_reduction_value(total_co2_reduction)["total_financial_value"]
         }
     
