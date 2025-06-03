@@ -19,14 +19,15 @@ from jose import jwt
 load_dotenv()
 
 # MongoDB connection
-MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017/climabill")
+MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017")
+DB_NAME = os.getenv("DB_NAME", "climabill_database")
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "climabill-secret-key-change-in-production")
 
 async def create_sample_tenants():
     """Create sample tenant data"""
     # Connect to MongoDB
     client = AsyncIOMotorClient(MONGO_URL)
-    db = client.get_default_database()
+    db = client[DB_NAME]
     multitenancy = MultiTenancyService(db)
     
     print("🏢 Creating sample tenants...")
