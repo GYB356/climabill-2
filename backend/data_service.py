@@ -1,3 +1,4 @@
+from motor.motor_asyncio import AsyncIOMotorCollection
 from typing import Dict, List, Any, Optional
 from datetime import datetime, timedelta
 from models import *
