@@ -14,6 +14,8 @@ const Navbar = ({ company, onCompanyChange }) => {
     { path: '/ai-chat', label: 'AI Assistant', icon: '🤖' },
     { path: '/emissions', label: 'Emissions', icon: '🌱' },
     { path: '/financial-impact', label: 'Financial Impact', icon: '💰' },
+    { path: '/marketplace', label: 'Carbon Marketplace', icon: '⛓️' },
+    { path: '/supply-chain', label: 'Supply Chain', icon: '🔗' },
   ];
 
   return (
