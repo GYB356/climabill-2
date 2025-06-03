@@ -361,16 +361,18 @@ class SecurityMiddleware:
         try:
             # Check request size
             if not await self.security_service.validate_request_size(request):
-                raise HTTPException(
-                    status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                    detail="Request too large"
+                return Response(
+                    content='{"detail": "Request too large"}',
+                    status_code=413,
+                    media_type="application/json"
                 )
             
-            # Check rate limits
+            # Check rate limits  
             if not await self.security_service.check_rate_limit(request):
-                raise HTTPException(
-                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                    detail="Rate limit exceeded"
+                return Response(
+                    content='{"detail": "Rate limit exceeded"}',
+                    status_code=429,
+                    media_type="application/json"
                 )
             
             # Process request
@@ -391,8 +393,6 @@ class SecurityMiddleware:
             
             return response
             
-        except HTTPException:
-            raise
         except Exception as e:
             await self.security_service.log_security_event(
                 request=request,
@@ -400,9 +400,10 @@ class SecurityMiddleware:
                 details={"error": str(e)},
                 severity="error"
             )
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Security check failed"
+            return Response(
+                content='{"detail": "Security check failed"}',
+                status_code=500,
+                media_type="application/json"
             )
 
 # API Key authentication
