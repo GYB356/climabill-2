@@ -156,12 +156,13 @@ async def process_ai_query(
         emissions_trend = await service.get_emissions_trend(company_id, 12)
         top_sources = await service.get_top_emission_sources(company_id)
         
-        # Prepare context data
+        # Prepare context data (convert datetime objects to strings)
         company_data = {
             **company,
             "recent_emissions": emissions_summary,
             "emissions_trend": emissions_trend,
-            "emission_sources": top_sources
+            "emission_sources": top_sources,
+            "created_at": company.get('created_at', datetime.utcnow()).isoformat() if isinstance(company.get('created_at'), datetime) else str(company.get('created_at', ''))
         }
         
         # Process query with AI
