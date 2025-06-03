@@ -27,10 +27,11 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# Initialize services
-carbon_service = CarbonDataService(db)
-ai_service = CarbonAIService()
-calculator = CarbonCalculator()
+# Import blockchain service
+from blockchain_service import BlockchainService
+
+# Initialize blockchain service
+blockchain_service = BlockchainService()
 
 # Create the main app without a prefix
 app = FastAPI(title="ClimaBill API", description="Carbon Intelligence and Billing Management Platform", version="1.0.0")
