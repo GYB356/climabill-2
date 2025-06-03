@@ -530,6 +530,9 @@ class ClimaBillAPITester:
             "compliance/standards", 
             200
         )
+        
+    def run_all_tests(self):
+        """Run all API tests"""
         print("🚀 Starting ClimaBill API Tests")
         
         # Basic health check
