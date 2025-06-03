@@ -73,6 +73,9 @@ async def get_auth_service():
 async def get_multitenancy_service():
     return multitenancy_service
 
+async def get_security_service():
+    return security_service
+
 # Health check endpoint (no authentication required)
 @api_router.get("/")
 async def root():
