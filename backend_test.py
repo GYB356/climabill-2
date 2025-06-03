@@ -933,14 +933,14 @@ class ClimaBillAPITester:
         return self.tests_passed == self.tests_run
 
 def main():
-    # Get the backend URL from the frontend .env file
-    backend_url = "https://2af63da8-69f3-449e-9a45-00a182941828.preview.emergentagent.com"
+    # Use localhost:8001 as the backend URL
+    backend_url = "http://localhost:8001"
     
     # Create tester instance
     tester = ClimaBillAPITester(backend_url)
     
-    # Run all tests
-    success = tester.run_all_tests()
+    # Run multi-tenant tests
+    success = tester.run_multi_tenant_tests()
     
     # Return exit code based on test results
     return 0 if success else 1
