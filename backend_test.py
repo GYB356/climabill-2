@@ -596,7 +596,7 @@ class ClimaBillAPITester:
 
 def main():
     # Get the backend URL from the frontend .env file
-    backend_url = "https://0ce4d86b-7397-4bc2-ac0a-a1db46ac1241.preview.emergentagent.com"
+    backend_url = "https://2af63da8-69f3-449e-9a45-00a182941828.preview.emergentagent.com"
     
     # Create tester instance
     tester = ClimaBillAPITester(backend_url)
