@@ -86,6 +86,138 @@ async def health_check():
     return {"status": "healthy", "timestamp": datetime.utcnow()}
 
 # Authentication Endpoints (no tenant validation required)
+@api_router.post("/auth/register")
+async def register_user(
+    user_data: dict,
+    multitenancy: MultiTenancyService = Depends(get_multitenancy_service),
+    security: SecurityService = Depends(get_security_service)
+):
+    """Register a new user and create their tenant"""
+    import hashlib
+    from jose import jwt
+    import uuid
+    
+    try:
+        # Input validation
+        email = security.validate_email(user_data.get("email", ""))
+        password = security.validate_input_string(user_data.get("password", ""), "password")
+        first_name = security.validate_input_string(user_data.get("first_name", ""), "first_name")
+        last_name = security.validate_input_string(user_data.get("last_name", ""), "last_name")
+        company_name = security.validate_input_string(user_data.get("company_name", ""), "company_name")
+        
+        # Company/tenant data validation
+        industry = user_data.get("industry", "saas")
+        employee_count = security.validate_numeric_input(user_data.get("employee_count", 1), "employee_count", min_val=1, max_val=1000000)
+        annual_revenue = security.validate_numeric_input(user_data.get("annual_revenue", 0), "annual_revenue", min_val=0)
+        headquarters_location = security.validate_input_string(user_data.get("headquarters_location", ""), "headquarters_location")
+        
+        # Check if user already exists
+        existing_user = await multitenancy.users.find_one({"email": email})
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User with this email already exists"
+            )
+        
+        # Create tenant first
+        tenant_id = str(uuid.uuid4())
+        tenant_data = {
+            "id": tenant_id,
+            "name": company_name,
+            "domain": email.split("@")[1],  # Use email domain as tenant domain
+            "plan": "professional",
+            "industry": industry,
+            "employee_count": int(employee_count),
+            "annual_revenue": float(annual_revenue),
+            "headquarters_location": headquarters_location,
+            "compliance_standards": user_data.get("compliance_standards", []),
+            "max_users": 25,
+            "features_enabled": [
+                "carbon_tracking", "ai_chat", "marketplace", "compliance", "supply_chain"
+            ]
+        }
+        
+        tenant = await multitenancy.create_tenant(tenant_data)
+        
+        # Create admin user for the tenant
+        user_id = str(uuid.uuid4())
+        hashed_password = hashlib.sha256(password.encode()).hexdigest()
+        
+        user = {
+            "id": user_id,
+            "email": email,
+            "first_name": first_name,
+            "last_name": last_name,
+            "role": "admin",  # First user is always admin
+            "tenant_id": tenant_id,
+            "is_active": True,
+            "created_at": datetime.utcnow(),
+            "last_login": datetime.utcnow(),
+            "hashed_password": hashed_password
+        }
+        
+        await multitenancy.users.insert_one(user)
+        
+        # Create the company within the tenant
+        company_id = str(uuid.uuid4())
+        company = {
+            "id": company_id,
+            "name": company_name,
+            "industry": industry,
+            "employee_count": int(employee_count),
+            "annual_revenue": float(annual_revenue),
+            "headquarters_location": headquarters_location,
+            "created_at": datetime.utcnow(),
+            "compliance_standards": user_data.get("compliance_standards", [])
+        }
+        
+        await multitenancy.insert_one_scoped(multitenancy.companies, company, tenant_id)
+        
+        # Create JWT token
+        payload = {
+            "sub": user_id,
+            "tenant_id": tenant_id,
+            "role": "admin",
+            "exp": datetime.utcnow() + timedelta(days=30),
+            "iat": datetime.utcnow()
+        }
+        
+        token = jwt.encode(payload, multitenancy.SECRET_KEY, algorithm="HS256")
+        
+        return {
+            "access_token": token,
+            "token_type": "bearer",
+            "user": {
+                "id": user_id,
+                "email": email,
+                "first_name": first_name,
+                "last_name": last_name,
+                "role": "admin"
+            },
+            "tenant": {
+                "id": tenant_id,
+                "name": company_name,
+                "domain": tenant["domain"],
+                "plan": "professional"
+            },
+            "company": {
+                "id": company_id,
+                "name": company_name,
+                "industry": industry,
+                "employee_count": int(employee_count),
+                "annual_revenue": float(annual_revenue),
+                "headquarters_location": headquarters_location
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Registration failed: {str(e)}"
+        )
+
 @api_router.post("/auth/login")
 async def login(
     email: str,
