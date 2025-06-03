@@ -9,6 +9,14 @@ from models import CarbonForecast, CarbonReductionInitiative
 class CarbonAIService:
     def __init__(self):
         self.openai_client = openai.OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+    
+    def safe_json_dumps(self, obj):
+        """Safely convert data to JSON strings, handling datetime objects"""
+        def default(o):
+            if isinstance(o, datetime):
+                return o.isoformat()
+            return str(o)
+        return json.dumps(obj, default=default, indent=2)
         
     async def process_natural_language_query(self, company_data: Dict, query: str, user_context: Optional[Dict] = None) -> str:
         """Process natural language queries about carbon data using GPT-4"""
