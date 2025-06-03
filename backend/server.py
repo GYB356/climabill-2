@@ -76,6 +76,99 @@ async def root():
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.utcnow()}
 
+# Authentication Endpoints (no tenant validation required)
+@api_router.post("/auth/login")
+async def login(
+    email: str,
+    password: str,
+    multitenancy: MultiTenancyService = Depends(get_multitenancy_service)
+):
+    """Login with email and password, returns JWT token"""
+    import hashlib
+    from jose import jwt
+    
+    # Hash the provided password
+    hashed_password = hashlib.sha256(password.encode()).hexdigest()
+    
+    # Find user by email and password
+    user = await multitenancy.users.find_one({
+        "email": email,
+        "hashed_password": hashed_password,
+        "is_active": True
+    })
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password"
+        )
+    
+    # Get tenant information
+    tenant = await multitenancy.get_tenant_by_id(user["tenant_id"])
+    if not tenant:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Tenant not found or inactive"
+        )
+    
+    # Create JWT token
+    payload = {
+        "sub": user["id"],
+        "tenant_id": user["tenant_id"],
+        "role": user["role"],
+        "exp": datetime.utcnow() + timedelta(days=30),
+        "iat": datetime.utcnow()
+    }
+    
+    token = jwt.encode(payload, multitenancy.SECRET_KEY, algorithm="HS256")
+    
+    # Update last login
+    await multitenancy.users.update_one(
+        {"id": user["id"]},
+        {"$set": {"last_login": datetime.utcnow()}}
+    )
+    
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {
+            "id": user["id"],
+            "email": user["email"],
+            "first_name": user["first_name"],
+            "last_name": user["last_name"],
+            "role": user["role"]
+        },
+        "tenant": {
+            "id": tenant["id"],
+            "name": tenant["name"],
+            "domain": tenant["domain"],
+            "plan": tenant["plan"]
+        }
+    }
+
+@api_router.get("/auth/me")
+async def get_current_user_info(
+    current_user: dict = Depends(get_current_user),
+    current_tenant: dict = Depends(get_current_tenant)
+):
+    """Get current user and tenant information"""
+    return {
+        "user": {
+            "id": current_user["id"],
+            "email": current_user["email"],
+            "first_name": current_user["first_name"],
+            "last_name": current_user["last_name"],
+            "role": current_user["role"]
+        },
+        "tenant": {
+            "id": current_tenant["id"],
+            "name": current_tenant["name"],
+            "domain": current_tenant["domain"],
+            "plan": current_tenant["plan"],
+            "industry": current_tenant["industry"]
+        }
+    }
+
 # Company Management Endpoints
 @api_router.post("/companies", response_model=Company)
 async def create_company(
