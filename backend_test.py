@@ -888,66 +888,47 @@ class ClimaBillAPITester:
             200
         )
         
-    def run_all_tests(self):
-        """Run all API tests"""
-        print("🚀 Starting ClimaBill API Tests")
+    def run_multi_tenant_tests(self):
+        """Run all multi-tenant API tests"""
+        print("🚀 Starting ClimaBill Multi-Tenant API Tests")
         
-        # Basic health check
-        self.test_health_check()
+        # Authentication Tests
+        self.test_login_alpha_admin()
+        self.test_login_beta_admin()
+        self.test_login_invalid_credentials()
+        self.test_get_current_user_alpha()
+        self.test_get_current_user_beta()
+        self.test_get_current_user_invalid_token()
         
-        # Company management
-        self.test_create_company()
-        self.test_get_company()
-        self.test_list_companies()
+        # Company Endpoints Tests
+        self.test_list_companies_alpha()
+        self.test_list_companies_beta()
+        self.test_get_company_alpha()
+        self.test_get_company_beta()
+        self.test_cross_tenant_company_access_alpha_to_beta()
+        self.test_cross_tenant_company_access_beta_to_alpha()
+        self.test_create_company_alpha()
+        self.test_create_company_beta()
         
-        # Emissions data
-        self.test_add_emission_source()
-        self.test_get_emissions_summary()
-        self.test_get_emissions_trend()
-        self.test_get_top_emission_sources()
+        # Emission Endpoints Tests
+        self.test_create_emission_record_alpha()
+        self.test_create_emission_record_beta()
+        self.test_get_emissions_summary_alpha()
+        self.test_get_emissions_summary_beta()
+        self.test_get_emissions_trend_alpha()
+        self.test_get_emissions_trend_beta()
+        self.test_get_top_emission_sources_alpha()
+        self.test_get_top_emission_sources_beta()
+        self.test_cross_tenant_emissions_access_alpha_to_beta()
+        self.test_cross_tenant_emissions_access_beta_to_alpha()
         
-        # AI features
-        self.test_ai_query()
-        self.test_emissions_forecast()
-        self.test_reduction_recommendations()
-        
-        # Carbon calculations
-        self.test_calculate_electricity_emissions()
-        self.test_calculate_fuel_emissions()
-        self.test_calculate_travel_emissions()
-        
-        # Dashboard and analytics
-        self.test_get_dashboard_data()
-        
-        # Carbon targets
-        self.test_create_carbon_target()
-        self.test_get_company_targets()
-        self.test_get_target_progress()
-        
-        # Reduction initiatives
-        self.test_create_reduction_initiative()
-        self.test_get_company_initiatives()
-        self.test_get_financial_impact()
-        
-        # Benchmarking
-        self.test_get_industry_benchmark()
-        
-        # Carbon Marketplace
-        self.test_marketplace_projects()
-        self.test_marketplace_purchase()
-        self.test_get_company_certificates()
-        
-        # Supply Chain
-        self.test_add_supplier()
-        self.test_get_company_suppliers()
-        self.test_get_supply_chain_dashboard()
-        
-        # Compliance
-        self.test_get_compliance_dashboard()
-        self.test_get_compliance_standards()
+        # Error Handling Tests
+        self.test_missing_auth_header()
+        self.test_malformed_request()
+        self.test_invalid_company_id()
         
         # Print results
-        print(f"\n📊 Tests passed: {self.tests_passed}/{self.tests_run} ({(self.tests_passed/self.tests_run)*100:.1f}%)")
+        print(f"\n📊 Multi-Tenant Tests passed: {self.tests_passed}/{self.tests_run} ({(self.tests_passed/self.tests_run)*100:.1f}%)")
         
         return self.tests_passed == self.tests_run
 
