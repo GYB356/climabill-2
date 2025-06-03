@@ -101,3 +101,113 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Test the ClimaBill multi-tenant backend API comprehensively, focusing on multi-tenancy isolation, authentication endpoints, company endpoints, emission endpoints, cross-tenant security, and error handling."
+
+backend:
+  - task: "Multi-Tenancy Isolation"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Multi-tenancy isolation needs to be tested to ensure Alpha and Beta tenants can only access their own data."
+
+  - task: "Authentication Endpoints"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Authentication endpoints need to be tested for login and user info retrieval."
+
+  - task: "Company Endpoints"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Company endpoints need to be tested for listing, retrieving, and creating companies."
+
+  - task: "Emission Endpoints"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Emission endpoints need to be tested for summary, trend, and top sources."
+
+  - task: "Cross-Tenant Security"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Cross-tenant security needs to be tested to ensure tenants cannot access each other's data."
+
+  - task: "Error Handling"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Error handling needs to be tested for invalid tokens, missing headers, and malformed requests."
+
+frontend:
+  - task: "UI Integration"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Frontend UI integration is not part of this testing scope."
+
+metadata:
+  created_by: "testing_agent"
+  version: "1.0"
+  test_sequence: 0
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Multi-Tenancy Isolation"
+    - "Authentication Endpoints"
+    - "Company Endpoints"
+    - "Emission Endpoints"
+    - "Cross-Tenant Security"
+    - "Error Handling"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "testing"
+    message: "Starting comprehensive testing of the ClimaBill multi-tenant backend API."
