@@ -261,6 +261,16 @@ class CarbonDataService:
         else:
             annual_roi = 0
         
+        # Calculate payback period
+        if total_annual_savings > 0:
+            payback_period = total_investment / total_annual_savings
+        else:
+            payback_period = float('inf')
+        
+        # Handle inf values for JSON serialization
+        if payback_period == float('inf'):
+            payback_period = 999.0  # Use a large number instead of infinity
+        
         return {
             "total_carbon_investment": total_investment,
             "annual_cost_savings": total_annual_savings,
